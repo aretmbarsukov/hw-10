@@ -16,12 +16,24 @@ class App extends Component {
   };
 
   addContact = ({ name, number }) => {
-    const exists = this.state.contacts.some(
-      c => c.name.toLowerCase() === name.toLowerCase()
+    const normalizedName = name.toLowerCase().trim();
+    const normalizedNumber = number.replace(/\D/g, '');
+
+    const nameExists = this.state.contacts.some(
+      c => c.name.toLowerCase().trim() === normalizedName
     );
 
-    if (exists) {
-      alert(`${name} is already in contacts`);
+    const numberExists = this.state.contacts.some(
+      c => c.number.replace(/\D/g, '') === normalizedNumber
+    );
+
+    if (nameExists) {
+      alert(`Контакт з ім'ям "${name}" вже існує`);
+      return;
+    }
+
+    if (numberExists) {
+      alert(`Номер "${number}" вже існує`);
       return;
     }
 
@@ -49,7 +61,7 @@ class App extends Component {
 
   render() {
     return (
-      <div>
+      <div className="wrapper">
         <h1>Phonebook</h1>
         <ContactForm onSubmit={this.addContact} />
 
