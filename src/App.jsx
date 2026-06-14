@@ -1,95 +1,71 @@
 import React, { Component } from 'react';
-import { nanoid } from 'nanoid';
-import ContactForm from './components/ContactForm';
-import ContactList from './components/ContactList';
-import Filter from './components/Filter';
 
-const STORAGE_KEY = 'phonebook-contacts';
-
-class App extends Component {
+class ContactForm extends Component {
   state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
-    filter: '',
+    name: '',
+    number: '',
   };
 
-  componentDidMount() {
-    const savedContacts = localStorage.getItem(STORAGE_KEY);
+  handleChange = e => {
+    this.setState({ [e.target.name]: e.target.value });
+  };
 
-    if (savedContacts) {
-      this.setState({ contacts: JSON.parse(savedContacts) });
-    }
-  }
+  handleSubmit = e => {
+    e.preventDefault();
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.contacts !== this.state.contacts) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state.contacts));
-    }
-  }
+    let { name, number } = this.state;
+    const digits = number.replace(/\D/g, '');
 
-  addContact = ({ name, number }) => {
-    const normalizedName = name.toLowerCase().trim();
-    const normalizedNumber = number.replace(/\D/g, '');
-
-    const nameExists = this.state.contacts.some(
-      c => c.name.toLowerCase().trim() === normalizedName
-    );
-
-    const numberExists = this.state.contacts.some(
-      c => c.number.replace(/\D/g, '') === normalizedNumber
-    );
-
-    if (nameExists) {
-      alert(`Контакт з ім'ям "${name}" вже існує`);
+    if (digits.length !== 7) {
+      alert('Номер повинен містити рівно 7 цифр');
       return;
     }
 
-    if (numberExists) {
-      alert(`Номер "${number}" вже існує`);
-      return;
-    }
+    const formatted =
+      digits.slice(0, 3) +
+      '-' +
+      digits.slice(3, 5) +
+      '-' +
+      digits.slice(5, 7);
 
-    this.setState(prev => ({
-      contacts: [...prev.contacts, { id: nanoid(), name, number }],
-    }));
-  };
-
-  deleteContact = id => {
-    this.setState(prev => ({
-      contacts: prev.contacts.filter(c => c.id !== id),
-    }));
-  };
-
-  changeFilter = e => {
-    this.setState({ filter: e.target.value });
-  };
-
-  getFilteredContacts = () => {
-    const normalized = this.state.filter.toLowerCase();
-    return this.state.contacts.filter(c =>
-      c.name.toLowerCase().includes(normalized)
-    );
+    this.props.onSubmit({ name, number: formatted });
+    this.setState({ name: '', number: '' });
   };
 
   render() {
     return (
-      <div className="wrapper">
-        <h1>Phonebook</h1>
-        <ContactForm onSubmit={this.addContact} />
+      <form onSubmit={this.handleSubmit}>
+        <label>
+          Name
+          <input
+            type="text"
+            name="name"
+            id="name"
+            autoComplete="name"
+            pattern="^[a-zA-Z\u0400-\u04FF]+(([' \-][a-zA-Z\u0400-\u04FF ])?[a-zA-Z\u0400-\u04FF]*)*$"
+            required
+            value={this.state.name}
+            onChange={this.handleChange}
+          />
+        </label>
 
-        <h2>Contacts</h2>
-        <Filter value={this.state.filter} onChange={this.changeFilter} />
-        <ContactList
-          contacts={this.getFilteredContacts()}
-          onDelete={this.deleteContact}
-        />
-      </div>
+        <label>
+          Number
+          <input
+            type="tel"
+            name="number"
+            id="number"
+            autoComplete="tel"
+            required
+            value={this.state.number}
+            onChange={this.handleChange}
+          />
+        </label>
+
+        <button type="submit">Add contact</button>
+      </form>
     );
   }
 }
 
-export default App;
+export default ContactForm;
